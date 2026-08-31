@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -41,7 +42,7 @@ string getMedal(int points) {
 }
 
 // ============================================================
-// STORAGE
+// STORAGE SERVICE
 // ============================================================
 
 class StorageService {
@@ -52,6 +53,10 @@ private:
 
 public:
 
+    // ========================================================
+    // SAVE DATA
+    // ========================================================
+
     void save(
         const Teacher& teacher,
         const vector<Student>& students
@@ -60,7 +65,9 @@ public:
         ofstream file(fileName);
 
         if (!file.is_open()) {
+
             cout << "Error: Could not save data.\n";
+
             return;
         }
 
@@ -74,14 +81,20 @@ public:
         for (const auto& student : students) {
 
             file
-                << student.id << "|"
-                << student.name << "|"
+                << student.id
+                << "|"
+                << student.name
+                << "|"
                 << student.points
                 << "\n";
         }
 
         file.close();
     }
+
+    // ========================================================
+    // LOAD DATA
+    // ========================================================
 
     bool load(
         Teacher& teacher,
@@ -90,12 +103,16 @@ public:
 
         ifstream file(fileName);
 
+        // No saved data yet
         if (!file.is_open())
             return false;
 
         string line;
 
+        // ----------------------------------------------------
         // TEACHER
+        // ----------------------------------------------------
+
         getline(file, line);
 
         if (line != "TEACHER")
@@ -103,7 +120,10 @@ public:
 
         getline(file, teacher.name);
 
+        // ----------------------------------------------------
         // STUDENTS
+        // ----------------------------------------------------
+
         getline(file, line);
 
         if (line != "STUDENTS")
@@ -125,6 +145,14 @@ public:
             getline(ss, id, '|');
             getline(ss, name, '|');
             getline(ss, points, '|');
+
+            if (
+                id.empty() ||
+                name.empty() ||
+                points.empty()
+            ) {
+                continue;
+            }
 
             Student student;
 
@@ -160,18 +188,45 @@ private:
 public:
 
     // ========================================================
-    // LOGIN / TEACHER
+    // LOAD DATA
     // ========================================================
 
-    bool loadData() {
+    void loadData() {
 
-        return storage.load(
+        storage.load(
+            teacher,
+            students
+        );
+
+        // Make sure next ID is always higher
+        // than the largest existing student ID.
+
+        for (const auto& student : students) {
+
+            if (student.id >= nextId)
+                nextId = student.id + 1;
+        }
+    }
+
+    // ========================================================
+    // SAVE DATA
+    // ========================================================
+
+    void saveData() {
+
+        storage.save(
             teacher,
             students
         );
     }
 
-    void setTeacherName(const string& name) {
+    // ========================================================
+    // TEACHER
+    // ========================================================
+
+    void setTeacherName(
+        const string& name
+    ) {
 
         teacher.name = name;
 
@@ -189,27 +244,19 @@ public:
     }
 
     // ========================================================
-    // STORAGE
-    // ========================================================
-
-    void saveData() {
-
-        storage.save(
-            teacher,
-            students
-        );
-    }
-
-    // ========================================================
     // ADD STUDENT
     // ========================================================
 
-    Student addStudent(const string& name) {
+    Student addStudent(
+        const string& name
+    ) {
 
         Student student;
 
         student.id = nextId++;
+
         student.name = name;
+
         student.points = 0;
 
         students.push_back(student);
@@ -223,13 +270,16 @@ public:
     // DELETE STUDENT
     // ========================================================
 
-    bool deleteStudent(int id) {
+    bool deleteStudent(
+        int id
+    ) {
 
         auto it = find_if(
             students.begin(),
             students.end(),
 
             [id](const Student& student) {
+
                 return student.id == id;
             }
         );
@@ -248,7 +298,9 @@ public:
     // GET STUDENT
     // ========================================================
 
-    Student* getStudent(int id) {
+    Student* getStudent(
+        int id
+    ) {
 
         for (auto& student : students) {
 
@@ -263,14 +315,16 @@ public:
     // ATTENDANCE
     // ========================================================
 
-    bool recordAttendance(int id) {
+    bool recordAttendance(
+        int id
+    ) {
 
         Student* student = getStudent(id);
 
         if (!student)
             return false;
 
-        // حضور +10
+        // Attendance +10
         student->points += 10;
 
         saveData();
@@ -282,14 +336,16 @@ public:
     // INTERACTION
     // ========================================================
 
-    bool addInteraction(int id) {
+    bool addInteraction(
+        int id
+    ) {
 
         Student* student = getStudent(id);
 
         if (!student)
             return false;
 
-        // تفاعل +5
+        // Interaction +5
         student->points += 5;
 
         saveData();
@@ -301,16 +357,19 @@ public:
     // LATE
     // ========================================================
 
-    bool recordLate(int id) {
+    bool recordLate(
+        int id
+    ) {
 
         Student* student = getStudent(id);
 
         if (!student)
             return false;
 
-        // تأخير -5
+        // Late -5
         student->points -= 5;
 
+        // Points cannot go below zero
         if (student->points < 0)
             student->points = 0;
 
@@ -323,16 +382,19 @@ public:
     // ABSENCE
     // ========================================================
 
-    bool recordAbsence(int id) {
+    bool recordAbsence(
+        int id
+    ) {
 
         Student* student = getStudent(id);
 
         if (!student)
             return false;
 
-        // غياب -10
+        // Absence -10
         student->points -= 10;
 
+        // Points cannot go below zero
         if (student->points < 0)
             student->points = 0;
 
@@ -357,6 +419,7 @@ public:
 
         student->points += amount;
 
+        // Points cannot go below zero
         if (student->points < 0)
             student->points = 0;
 
@@ -375,7 +438,7 @@ public:
     }
 
     // ========================================================
-    // SEARCH
+    // SEARCH STUDENTS
     // ========================================================
 
     vector<Student> searchStudents(
@@ -399,7 +462,7 @@ public:
     }
 
     // ========================================================
-    // SORT
+    // SORT STUDENTS
     // ========================================================
 
     vector<Student> getSortedStudents() const {
@@ -476,6 +539,24 @@ public:
         return count;
     }
 
+    int getNoMedalCount() const {
+
+        int count = 0;
+
+        for (const auto& student : students) {
+
+            if (
+                getMedal(student.points)
+                == "none"
+            ) {
+
+                count++;
+            }
+        }
+
+        return count;
+    }
+
     // ========================================================
     // RESET ALL DATA
     // ========================================================
@@ -493,14 +574,17 @@ public:
 };
 
 // ============================================================
-// MAIN - TEST
+// MAIN
 // ============================================================
 
 int main() {
 
     StudentManager manager;
 
-    // محاولة تحميل البيانات القديمة
+    // ========================================================
+    // LOAD EXISTING DATA
+    // ========================================================
+
     manager.loadData();
 
     // ========================================================
@@ -521,38 +605,15 @@ int main() {
 
         if (teacherName.empty()) {
 
-            cout << "Teacher name cannot be empty.\n";
+            cout << "\nTeacher name cannot be empty.\n";
 
             return 0;
         }
 
-        manager.setTeacherName(teacherName);
+        manager.setTeacherName(
+            teacherName
+        );
     }
-
-    // ========================================================
-    // TEST DATA
-    // ========================================================
-
-    if (manager.getStudentCount() == 0) {
-
-        manager.addStudent("Ahmed");
-        manager.addStudent("Mohamed");
-        manager.addStudent("Omar");
-    }
-
-    // Ahmed
-    manager.recordAttendance(1);
-    manager.addInteraction(1);
-
-    // Mohamed
-    manager.recordAttendance(2);
-
-    // Omar
-    manager.recordAbsence(3);
-    manager.recordLate(3);
-
-    // Ahmed manual bonus
-    manager.changePoints(1, 100);
 
     // ========================================================
     // DASHBOARD
@@ -560,7 +621,7 @@ int main() {
 
     cout << "\n====================================\n";
     cout << "          TEACHER DASHBOARD\n";
-    cout << "====================================\n";
+    cout << "====================================\n\n";
 
     cout << "Teacher: "
          << manager.getTeacherName()
@@ -580,35 +641,51 @@ int main() {
 
     cout << "Silver Medals: "
          << manager.getSilverCount()
+         << "\n";
+
+    cout << "No Medal: "
+         << manager.getNoMedalCount()
          << "\n\n";
 
     // ========================================================
-    // STUDENT RANKING
+    // STUDENTS
     // ========================================================
 
-    cout << "====================================\n";
-    cout << "          STUDENT RANKING\n";
-    cout << "====================================\n";
+    if (manager.getStudentCount() == 0) {
 
-    auto sortedStudents =
-        manager.getSortedStudents();
+        cout << "------------------------------------\n";
+        cout << "No students yet.\n";
+        cout << "Add your first student from the UI.\n";
+        cout << "------------------------------------\n";
 
-    int rank = 1;
+    } else {
 
-    for (const auto& student : sortedStudents) {
+        cout << "====================================\n";
+        cout << "          STUDENT RANKING\n";
+        cout << "====================================\n\n";
 
-        cout
-            << rank++
-            << ". "
-            << student.name
-            << " | Points: "
-            << student.points
-            << " | Medal: "
-            << getMedal(student.points)
-            << "\n";
+        auto sortedStudents =
+            manager.getSortedStudents();
+
+        int rank = 1;
+
+        for (const auto& student : sortedStudents) {
+
+            cout
+                << rank++
+                << ". "
+                << student.name
+                << " | Points: "
+                << student.points
+                << " | Medal: "
+                << getMedal(student.points)
+                << "\n";
+        }
     }
 
-    cout << "\nData saved locally.\n";
+    cout << "\n====================================\n";
+    cout << "Data saved locally.\n";
+    cout << "====================================\n";
 
     return 0;
 }
