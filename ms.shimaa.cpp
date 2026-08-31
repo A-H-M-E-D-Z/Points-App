@@ -33,32 +33,6 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController nameController = TextEditingController();
 
   @override
-  void dispose() {
-    // تنظيف الـ controller لما الشاشة تتقفل عشان نتجنب تسريب الذاكرة
-    nameController.dispose();
-    super.dispose();
-  }
-
-  void _login() {
-    final name = nameController.text.trim();
-
-    if (name.isEmpty) {
-      // فيدباك للمستخدم لو حاول يدخل من غير اسم
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('من فضلك اكتب اسم الطالب أولاً')),
-      );
-      return;
-    }
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => StudentDashboard(studentName: name),
-      ),
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
@@ -75,8 +49,6 @@ class _LoginPageState extends State<LoginPage> {
             const SizedBox(height: 30),
             TextField(
               controller: nameController,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _login(),
               decoration: const InputDecoration(
                 labelText: 'اسم الطالب',
                 border: OutlineInputBorder(),
@@ -88,7 +60,16 @@ class _LoginPageState extends State<LoginPage> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: _login,
+                onPressed: () {
+                  if (nameController.text.isNotEmpty) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => StudentDashboard(studentName: nameController.text),
+                      ),
+                    );
+                  }
+                },
                 child: const Text('دخول', style: TextStyle(fontSize: 18)),
               ),
             ),
@@ -111,22 +92,11 @@ class StudentDashboard extends StatefulWidget {
 class _StudentDashboardState extends State<StudentDashboard> {
   int points = 50; // نقاط تجريبية تبدأ بها
 
-  // حدود المستويات في مكان واحد عشان يبقى التعديل عليها أسهل
-  static const int silverThreshold = 80;
-  static const int goldThreshold = 150;
-
   // دالة تحديد المستوى بناءً على النقاط
   String getLevel(int pts) {
-    if (pts >= goldThreshold) return "ذهبي 🥇";
-    if (pts >= silverThreshold) return "فضي 🥈";
+    if (pts >= 150) return "ذهبي 🥇";
+    if (pts >= 80) return "فضي 🥈";
     return "برونزي 🥉";
-  }
-
-  void _addPoints(int amount) {
-    setState(() {
-      points += amount;
-      if (points < 0) points = 0; // منع النقاط من تبقى بالسالب
-    });
   }
 
   @override
@@ -158,28 +128,28 @@ class _StudentDashboardState extends State<StudentDashboard> {
               ),
             ),
             const SizedBox(height: 30),
-
+            
             // أزرار تجريبية لإضافة النقاط
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              alignment: WrapAlignment.center,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton.icon(
-                  onPressed: () => _addPoints(10),
+                  onPressed: () {
+                    setState(() {
+                      points += 10; // إضافة 10 نقاط عند الالتزام بالحضور
+                    });
+                  },
                   icon: const Icon(Icons.check),
                   label: const Text('حضور (+10)'),
                 ),
                 ElevatedButton.icon(
-                  onPressed: () => _addPoints(5),
+                  onPressed: () {
+                    setState(() {
+                      points += 5; // إضافة 5 نقاط للتفاعل في الحصة
+                    });
+                  },
                   icon: const Icon(Icons.star),
                   label: const Text('تفاعل (+5)'),
-                ),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-                  onPressed: () => _addPoints(-10),
-                  icon: const Icon(Icons.close),
-                  label: const Text('غياب (-10)'),
                 ),
               ],
             ),
