@@ -11,7 +11,7 @@ function App() {
   );
 
   return (
-    <HasRouter>
+    <HashRouter>
       {loggedIn ? (
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
@@ -23,7 +23,7 @@ function App() {
       ) : (
         <Login onLogin={() => setLoggedIn(true)} />
       )}
-    </HasRouter>
+    </HashRouter>
   );
 }
 
