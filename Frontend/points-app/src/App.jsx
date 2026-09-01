@@ -1,10 +1,5 @@
 import { useState } from "react";
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
@@ -12,26 +7,23 @@ import Student from "./pages/Student.jsx";
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(
-    localStorage.getItem("teacherName") !== null
+    localStorage.getItem("teacherName") !== null,
   );
 
   return (
-    <BrowserRouter>
+    <HasRouter>
       {loggedIn ? (
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
 
           <Route path="/student/:id" element={<Student />} />
 
-          <Route
-            path="*"
-            element={<Navigate to="/dashboard" replace />}
-          />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       ) : (
         <Login onLogin={() => setLoggedIn(true)} />
       )}
-    </BrowserRouter>
+    </HasRouter>
   );
 }
 
